@@ -1,65 +1,77 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Chuck Norris Joke Generator</title>
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.css">
-	<style>
-		body, input {
-			font-family: 'Segoe UI', sans-serif;
-		}
-		h2 {
-			font-weight: bold;
-		}
-	</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chuck Norris Joke Generator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.css">
+    <style>
+    body,
+    input {
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    h2 {
+        font-weight: bold;
+    }
+    </style>
 </head>
+
 <body>
-	<div class="container">
-		<h2>Chuck Norris Joke Generator</h2>
-		<form action="#">
-			<div>
-				<label for="number">Number of jokes</label>
-				<input type="number" id="number">
-			</div>
-			<div>
-				<button class="get-jokes">Get Jokes</button>
-			</div>
-		</form>
-		<ul class="jokes"></ul>
-	</div>
-	<script>
-		document.querySelector('.get-jokes').addEventListener('click', getJokes);
+    <div class="container">
+        <h2>Chuck Norris Joke Generator</h2>
+        <form action="#">
+            <div>
+                <label for="joke-categories">Select category</label>
+                <select name="categories" id="joke-categories">
+                    <option value="">Random</option>
+                </select>
+            </div>
+            <div>
+                <button class="get-jokes">Get Joke</button>
+            </div>
+        </form>
+        <ul class="jokes"></ul>
+    </div>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        loadCategories();
+    });
 
-		function getJokes(e){
-			e.preventDefault();
-			console.log('Get Jokes');
-			const number = document.querySelector('input#number').value;
-			console.log(number);
+    document.querySelector('.get-jokes').addEventListener('click', getJokes);
 
-			const xhr = new XMLHttpRequest();
-			xhr.open('GET', `https://api.chucknorris.io/jokes/random/${number}`, true);
+    function loadCategories() {
+        fetch('https://api.chucknorris.io/jokes/categories')
+            .then(response => response.json())
+            .then(categories => {
+                const select = document.querySelector('#joke-categories');
+                categories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category;
+                    option.textContent = category.charAt(0).toUpperCase() + category.slice(1);
+                    select.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Error fetching categories:', error));
+    }
 
-			xhr.onload = function(){
-				if(this.status === 200) {
-					const response = JSON.parse(this.responseText);
-					// console.log(response);
-					let output = '';
+    function getJokes(e) {
+        e.preventDefault();
+        const category = document.querySelector('#joke-categories').value;
+        const url = category ?
+            `https://api.chucknorris.io/jokes/random?category=${category}` :
+            `https://api.chucknorris.io/jokes/random`;
 
-					if(response.type === 'success') {
-						response.value.forEach(function(joke){
-							output += `<li>${joke.joke}</li>`;
-						});
-					} else {
-						output += '<li>Something wrong</li>';
-					}
-
-					document.querySelector('.jokes').innerHTML = output;
-				}
-			}
-
-			xhr.send();
-		}
-	</script>
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                const output = `<p>${data.value}</p>`;
+                document.querySelector('.jokes').innerHTML = output;
+            })
+            .catch(error => console.error('Error fetching joke:', error));
+    }
+    </script>
 </body>
+
 </html>
